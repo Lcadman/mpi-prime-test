@@ -13,12 +13,12 @@ BIN_DIR = bin
 BUILD_DIR = build
 
 # Output Executables
-SERIAL_EXEC = $(BIN_DIR)/miller_rabin_serial
-MPI_EXEC = $(BIN_DIR)/miller_rabin_mpi
+SERIAL_EXEC = $(BIN_DIR)/serial
+MPI_EXEC = $(BIN_DIR)/mpi
 
 # Source Files
-SERIAL_SRC = $(SRC_DIR)/miller_rabin_serial.cpp $(SRC_DIR)/mod_exp.cpp $(SRC_DIR)/prime_utilities.cpp
-MPI_SRC = $(SRC_DIR)/miller_rabin_mpi.cpp $(SRC_DIR)/mod_exp.cpp $(SRC_DIR)/prime_utilities.cpp
+SERIAL_SRC = $(SRC_DIR)/serial.cpp $(SRC_DIR)/miller_rabin.cpp
+MPI_SRC = $(SRC_DIR)/mpi.cpp $(SRC_DIR)/miller_rabin.cpp
 
 # Object Files
 SERIAL_OBJ = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SERIAL_SRC))
@@ -46,17 +46,17 @@ $(MPI_EXEC): $(MPI_OBJ) | $(BIN_DIR)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Compile Object Files (MPI)
-$(BUILD_DIR)/miller_rabin_mpi.o: $(SRC_DIR)/miller_rabin_mpi.cpp | $(BUILD_DIR)
+# Compile MPI Object Files (Explicitly using mpicxx)
+$(BUILD_DIR)/mpi.o: $(SRC_DIR)/mpi.cpp | $(BUILD_DIR)
 	$(MPICXX) $(MPI_CXXFLAGS) -c $< -o $@
 
-# Run MPI version locally
-run_mpi: $(MPI_EXEC)
-	mpirun -np 4 --bind-to none $(MPI_EXEC)
-
-# Run Serial version
+# Run Serial Version with Start and End arguments
 run_serial: $(SERIAL_EXEC)
-	$(SERIAL_EXEC)
+	$(SERIAL_EXEC) $(START) $(END)
+
+# Run MPI Version with Start and End arguments
+run_mpi: $(MPI_EXEC)
+	$(MPI_EXEC) $(START) $(END)
 
 # Clean compiled files
 clean:

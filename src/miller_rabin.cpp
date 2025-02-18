@@ -1,10 +1,6 @@
-#include <iostream>
-#include <cstdlib>
-#include <ctime>
-#include "mod_exp.h"
-#include "prime_utilities.h"
-
-using namespace std;
+#include "miller_rabin.h"
+#include <random>
+#include <vector>
 
 // Miller-Rabin Primality Test
 bool miller_rabin(uint64_t n, int k) {
@@ -51,24 +47,40 @@ bool miller_rabin(uint64_t n, int k) {
     return true;
 }
 
-int main() {
-    srand(time(0));
-
-    uint64_t start, end;
-    cout << "Enter the start of the range: ";
-    cin >> start;
-    cout << "Enter the end of the range: ";
-    cin >> end;
-
-    int iterations = 100; 
-
-    cout << "Prime numbers in range [" << start << ", " << end << "] are:\n";
-    for (uint64_t num = start; num <= end; num++) {
-        if (miller_rabin(num, iterations)) {
-            cout << num << " ";
-        }
+// Fast Modular Exponentiation using Exponentiation by Squaring
+uint64_t mod_exp(uint64_t base, uint64_t exp, uint64_t mod) {
+    uint64_t result = 1;
+    base = base % mod;
+    
+    while (exp > 0) {
+        if (exp & 1) // If exp is odd, multiply base with result
+            result = (result * base) % mod;
+        exp >>= 1; // Right shift exp by 1 (divide by 2)
+        base = (base * base) % mod; // Square the base
     }
-    cout << endl;
+    
+    return result;
+}
 
-    return 0;
+// Generate a random number in range [low, high] using C++11 random
+uint64_t random_in_range(uint64_t low, uint64_t high) {
+    static std::random_device rd;  // Obtain a random seed
+    static std::mt19937_64 gen(rd()); // 64-bit Mersenne Twister RNG
+    std::uniform_int_distribution<uint64_t> dist(low, high);
+    return dist(gen);
+}
+
+// Return a list of small primes useful for deterministic primality tests
+std::vector<uint64_t> get_small_prime_bases(uint64_t n) {
+    // These small primes are commonly used for primality testing
+    static const std::vector<uint64_t> small_primes = {
+        2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47
+    };
+    
+    std::vector<uint64_t> bases;
+    for (auto prime : small_primes) {
+        if (prime >= n) break; // Only return bases smaller than n
+        bases.push_back(prime);
+    }
+    return bases;
 }
