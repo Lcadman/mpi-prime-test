@@ -52,21 +52,23 @@ bool miller_rabin(uint64_t n, int k) {
 }
 
 int main() {
-    srand(time(0)); // Seed the random number generator for random base selection
+    srand(time(0));
 
-    uint64_t num;
-    cout << "Enter a number to test for primality: ";
-    cin >> num;
+    uint64_t start, end;
+    cout << "Enter the start of the range: ";
+    cin >> start;
+    cout << "Enter the end of the range: ";
+    cin >> end;
 
-    int iterations = 5; // Number of rounds for Miller-Rabin test
-    bool is_prime = miller_rabin(num, iterations);
+    int iterations = 100; 
 
-    // Output result
-    if (is_prime) {
-        cout << num << " is probably prime.\n";
-    } else {
-        cout << num << " is composite.\n";
+    cout << "Prime numbers in range [" << start << ", " << end << "] are:\n";
+    for (uint64_t num = start; num <= end; num++) {
+        if (miller_rabin(num, iterations)) {
+            cout << num << " ";
+        }
     }
+    cout << endl;
 
     return 0;
 }

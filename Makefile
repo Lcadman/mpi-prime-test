@@ -1,8 +1,11 @@
-# Compiler
-CXX = g++  # Using g++ instead of mpic++
+# Compilers
+CXX = g++          # Serial and general compilation
+MPICXX = mpicxx    # MPI Compiler (Automatically links MPI)
 CC = gcc
-CXXFLAGS = -O2 -Wall -Wextra -std=c++17
-LDFLAGS = -L/usr/lib -lmpi  # Manually link MPI
+
+# Compiler Flags
+CXXFLAGS = -O2 -Wall -Wextra -std=c++17 -fopenmp  # Enable OpenMP
+MPI_CXXFLAGS = $(CXXFLAGS)                         # MPI also needs OpenMP
 
 # Directories
 SRC_DIR = src
@@ -22,8 +25,7 @@ SERIAL_OBJ = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SERIAL_SRC))
 MPI_OBJ = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(MPI_SRC))
 
 # Default Target: Build Everything
-all: $(SERIAL_EXEC)
-# all: $(SERIAL_EXEC) $(MPI_EXEC)
+all: $(SERIAL_EXEC) $(MPI_EXEC)
 
 # Ensure directories exist
 $(BIN_DIR):
@@ -36,19 +38,23 @@ $(BUILD_DIR):
 $(SERIAL_EXEC): $(SERIAL_OBJ) | $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# Build MPI Version (Explicitly Link MPI)
+# Build MPI Version (Using mpicxx with OpenMP support)
 $(MPI_EXEC): $(MPI_OBJ) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
+	$(MPICXX) $(MPI_CXXFLAGS) -o $@ $^
 
-# Compile Object Files
+# Compile Object Files (Serial)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Run locally with MPI
-run_mpi: $(MPI_EXEC)
-	mpirun -np 4 $(MPI_EXEC)
+# Compile Object Files (MPI)
+$(BUILD_DIR)/miller_rabin_mpi.o: $(SRC_DIR)/miller_rabin_mpi.cpp | $(BUILD_DIR)
+	$(MPICXX) $(MPI_CXXFLAGS) -c $< -o $@
 
-# Run serial version
+# Run MPI version locally
+run_mpi: $(MPI_EXEC)
+	mpirun -np 4 --bind-to none $(MPI_EXEC)
+
+# Run Serial version
 run_serial: $(SERIAL_EXEC)
 	$(SERIAL_EXEC)
 
